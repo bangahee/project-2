@@ -1,3 +1,4 @@
+import json
 class Quiz:
     def __init__(self, question, choices, answer):
         self.question = question
@@ -12,6 +13,13 @@ class Quiz:
     def is_correct(self, user_answer):
         return user_answer == self.answer
 
+    def to_dict(self):
+        return {
+            "question": self.question,
+            "choices": self.choices,
+            "answer": self.answer
+        }
+
 default_quizzes = [
     Quiz("7 + 5는?", ["10", "11", "12", "13"], 3),
     Quiz("12 - 4는?", ["8", "6", "7", "9"], 1),
@@ -19,6 +27,9 @@ default_quizzes = [
     Quiz("16 ÷ 4는?", ["2", "4", "3", "5"], 2),
     Quiz("9 + 8는?", ["17", "15", "16", "18"], 1),
 ]
+
+quizzes = default_quizzes.copy()
+
 
 def show_menu():
     print("\n" + "=" * 40)
@@ -56,15 +67,45 @@ def get_number_input(prompt, min_value, max_value):
             print("\n입력이 종료되어 프로그램을 안전하게 종료합니다.")
             return None
 
-def play_quiz(quizzes):
-    if not quizzes:
+def get_text_input(prompt):
+    while True:
+        try:
+            user_input = input(prompt).strip()
+
+            if user_input == "":
+                print("빈 입력은 허용되지 않습니다. 다시 입력하세요.")
+                continue
+
+            return user_input
+
+        except KeyboardInterrupt:
+            print("\n입력이 중단되었습니다. 메뉴로 돌아갑니다.")
+            return None
+        except EOFError:
+            print("\n입력이 종료되었습니다. 메뉴로 돌아갑니다.")
+            return None
+
+def save_state():
+    data = {
+        "quizzes": [quiz.to_dict() for quiz in quizzes],
+        "best_score": 0
+    }
+
+    try:
+        with open("state.json", "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+    except Exception:
+        print("파일 저장 중 오류가 발생했습니다.")
+
+def play_quiz(quiz_list):
+    if not quiz_list:
         print("등록된 퀴즈가 없습니다.")
         return
 
-    print(f"\n퀴즈를 시작합니다! (총 {len(quizzes)}문제)")
+    print(f"\n퀴즈를 시작합니다! (총 {len(quiz_list)}문제)")
     correct_count = 0
 
-    for index, quiz in enumerate(quizzes, start=1):
+    for index, quiz in enumerate(quiz_list, start=1):
         print("\n" + "-" * 40)
         print(f"[문제 {index}]")
         quiz.display()
@@ -81,12 +122,36 @@ def play_quiz(quizzes):
         else:
             print(f"오답입니다! 정답은 {quiz.answer}번입니다.")
 
-    score = int((correct_count / len(quizzes)) * 100)
+    score = int((correct_count / len(quiz_list)) * 100)
 
     print("\n" + "=" * 40)
-    print(f"결과: {len(quizzes)}문제 중 {correct_count}문제 정답!")
+    print(f"결과: {len(quiz_list)}문제 중 {correct_count}문제 정답!")
     print(f"점수: {score}점")
     print("=" * 40)
+
+def add_quiz():
+    print("\n새로운 퀴즈를 추가합니다.")
+
+    question = get_text_input("문제를 입력하세요: ")
+    if question is None:
+        return
+
+    choices = []
+    for i in range(1, 5):
+        choice = get_text_input(f"선택지 {i}: ")
+        if choice is None:
+            return
+        choices.append(choice)
+
+    answer = get_number_input("정답 번호 (1~4): ", 1, 4)
+    if answer is None:
+        return
+
+    new_quiz = Quiz(question, choices, answer)
+    quizzes.append(new_quiz)
+    save_state()
+
+    print("퀴즈가 추가되었습니다!")
 
 def main():
     while True:
@@ -97,9 +162,9 @@ def main():
             print("프로그램을 종료합니다.")
             break
         elif choice == 1:
-            play_quiz(default_quizzes)
+            play_quiz(quizzes)
         elif choice == 2:
-            print("퀴즈 추가 기능 준비 중")
+            add_quiz()
         elif choice == 3:
             print("퀴즈 목록 기능 준비 중")
         elif choice == 4:
