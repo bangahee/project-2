@@ -35,31 +35,65 @@ class QuizGame:
         self.best_score = None
         self.load_state()
 
+    def get_default_quizzes_copy(self):
+        return [
+            Quiz(quiz.question, quiz.choices[:], quiz.answer)
+            for quiz in self.default_quizzes
+        ]
+
     def load_state(self):
         try:
             with open(self.state_file, "r", encoding="utf-8") as file:
                 data = json.load(file)
 
             quiz_data = data.get("quizzes", [])
-            self.quizzes = [
-                Quiz(item["question"], item["choices"], item["answer"])
-                for item in quiz_data
-            ]
+            loaded_quizzes = []
+
+            for item in quiz_data:
+                question = item["question"]
+                choices = item["choices"]
+                answer = item["answer"]
+
+                if not isinstance(question, str) or question.strip() == "":
+                    raise ValueError("question must be a non-empty string")
+
+                if not isinstance(choices, list) or len(choices) != 4:
+                    raise ValueError("choices must be a list of 4 items")
+
+                if not all(isinstance(choice, str) and choice.strip() != "" for choice in choices):
+                    raise ValueError("all choices must be non-empty strings")
+
+                if not isinstance(answer, int) or not (1 <= answer <= 4):
+                    raise ValueError("answer must be an integer between 1 and 4")
+
+                loaded_quizzes.append(Quiz(question, choices, answer))
+
+            self.quizzes = loaded_quizzes
             self.best_score = data.get("best_score")
 
+            if self.best_score is not None:
+                if not isinstance(self.best_score, int):
+                    raise ValueError("best_score must be an integer or null")
+                if self.best_score < 0:
+                    raise ValueError("best_score must not be negative")
+
             if not self.quizzes:
-                self.quizzes = self.default_quizzes.copy()
+                self.quizzes = self.get_default_quizzes_copy()
 
         except FileNotFoundError:
-            self.quizzes = self.default_quizzes.copy()
+            print("state.json 파일이 없어 기본 퀴즈를 불러옵니다.")
+            self.quizzes = self.get_default_quizzes_copy()
             self.best_score = None
-        except json.JSONDecodeError:
-            print("state.json 파일 형식이 올바르지 않아 기본 퀴즈를 불러옵니다.")
-            self.quizzes = self.default_quizzes.copy()
+
+        except (json.JSONDecodeError, ValueError, KeyError, TypeError):
+            print("state.json 파일이 손상되었거나 형식이 올바르지 않아 기본 퀴즈로 복구합니다.")
+            self.quizzes = self.get_default_quizzes_copy()
             self.best_score = None
-        except Exception:
-            print("파일 불러오기 중 오류가 발생하여 기본 퀴즈를 불러옵니다.")
-            self.quizzes = self.default_quizzes.copy()
+            self.save_state()
+
+        except OSError:
+            print("파일을 읽는 중 오류가 발생하여 기본 퀴즈를 불러옵니다.")
+            self.quizzes = self.get_default_quizzes_copy()
             self.best_score = None
 
     def save_state(self):
@@ -71,8 +105,8 @@ class QuizGame:
         try:
             with open(self.state_file, "w", encoding="utf-8") as file:
                 json.dump(data, file, ensure_ascii=False, indent=4)
-        except Exception:
-            print("파일 저장 중 오류가 발생했습니다.")
+        except OSError:
+            print("state.json 파일 저장 중 오류가 발생했습니다.")
 
     def show_menu(self):
         print("\n" + "=" * 40)
@@ -98,8 +132,8 @@ class QuizGame:
 
                 if min_value <= number <= max_value:
                     return number
-                else:
-                    print(f"잘못된 입력입니다. {min_value}~{max_value} 중에서 선택하세요.")
+
+                print(f"잘못된 입력입니다. {min_value}~{max_value} 중에서 선택하세요.")
 
             except ValueError:
                 print(f"잘못된 입력입니다. {min_value}~{max_value} 중에서 선택하세요.")
@@ -151,9 +185,10 @@ class QuizGame:
                 print("정답입니다!")
                 correct_count += 1
             else:
-                print(f"오답입니다! 정답은 {quiz.answer}번입니다.")
+                correct_text = quiz.choices[quiz.answer - 1]
+                print(f"오답입니다! 정답은 {quiz.answer}번 ({correct_text})입니다.")
 
-        score = int((correct_count / len(self.quizzes)) * 100)
+        score = correct_count
 
         if self.best_score is None or score > self.best_score:
             self.best_score = score
@@ -163,7 +198,7 @@ class QuizGame:
 
         print("\n" + "=" * 40)
         print(f"결과: {len(self.quizzes)}문제 중 {correct_count}문제 정답!")
-        print(f"점수: {score}점")
+        print(f"점수: {score}")
         print("=" * 40)
 
     def add_quiz(self):
@@ -200,6 +235,9 @@ class QuizGame:
 
         for index, quiz in enumerate(self.quizzes, start=1):
             print(f"[{index}] {quiz.question}")
+            for i, choice in enumerate(quiz.choices, start=1):
+                print(f"   {i}. {choice}")
+            print(f"   정답: {quiz.answer}번")
 
         print("-" * 40)
 
@@ -207,7 +245,7 @@ class QuizGame:
         if self.best_score is None:
             print("아직 퀴즈를 푼 기록이 없습니다.")
         else:
-            print(f"최고 점수: {self.best_score}점")
+            print(f"최고 점수: {self.best_score}")
 
     def run(self):
         while True:
@@ -229,3 +267,4 @@ class QuizGame:
 if __name__ == "__main__":
     game = QuizGame()
     game.run()
+
