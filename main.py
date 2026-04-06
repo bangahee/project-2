@@ -153,6 +153,19 @@ def add_quiz():
 
     print("퀴즈가 추가되었습니다!")
 
+def list_quizzes(quiz_list):
+    if not quiz_list:
+        print("등록된 퀴즈가 없습니다.")
+        return
+
+    print(f"\n등록된 퀴즈 목록 (총 {len(quiz_list)}개)")
+    print("-" * 40)
+
+    for index, quiz in enumerate(quiz_list, start=1):
+        print(f"[{index}] {quiz.question}")
+
+    print("-" * 40)
+
 def main():
     while True:
         show_menu()
@@ -166,7 +179,7 @@ def main():
         elif choice == 2:
             add_quiz()
         elif choice == 3:
-            print("퀴즈 목록 기능 준비 중")
+            list_quizzes(quizzes)
         elif choice == 4:
             print("점수 확인 기능 준비 중")
 
