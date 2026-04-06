@@ -29,7 +29,7 @@ default_quizzes = [
 ]
 
 quizzes = default_quizzes.copy()
-
+best_score = None
 
 def show_menu():
     print("\n" + "=" * 40)
@@ -88,7 +88,7 @@ def get_text_input(prompt):
 def save_state():
     data = {
         "quizzes": [quiz.to_dict() for quiz in quizzes],
-        "best_score": 0
+        "best_score": best_score
     }
 
     try:
@@ -98,6 +98,8 @@ def save_state():
         print("파일 저장 중 오류가 발생했습니다.")
 
 def play_quiz(quiz_list):
+    global best_score
+
     if not quiz_list:
         print("등록된 퀴즈가 없습니다.")
         return
@@ -123,6 +125,12 @@ def play_quiz(quiz_list):
             print(f"오답입니다! 정답은 {quiz.answer}번입니다.")
 
     score = int((correct_count / len(quiz_list)) * 100)
+
+    if best_score is None or score > best_score:
+        best_score = score
+        print("\n새로운 최고 점수입니다!")
+
+    save_state()
 
     print("\n" + "=" * 40)
     print(f"결과: {len(quiz_list)}문제 중 {correct_count}문제 정답!")
@@ -166,6 +174,12 @@ def list_quizzes(quiz_list):
 
     print("-" * 40)
 
+def show_best_score():
+    if best_score is None:
+        print("아직 퀴즈를 푼 기록이 없습니다.")
+    else:
+        print(f"최고 점수: {best_score}점")
+
 def main():
     while True:
         show_menu()
@@ -181,7 +195,7 @@ def main():
         elif choice == 3:
             list_quizzes(quizzes)
         elif choice == 4:
-            print("점수 확인 기능 준비 중")
+            show_best_score()
 
 if __name__ == "__main__":
     main()
