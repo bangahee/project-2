@@ -11,6 +11,14 @@ class Quiz:
 
     def is_correct(self, user_answer):
         return user_answer == self.answer
+    
+default_quizzes = [
+    Quiz("7 + 5는?", ["10", "11", "12", "13"], 3),
+    Quiz("12 - 4는?", ["8", "6", "7", "9"], 1),
+    Quiz("3 × 6는?", ["18", "16", "17", "19"], 1),
+    Quiz("16 ÷ 4는?", ["2", "4", "3", "5"], 2),
+    Quiz("9 + 8는?", ["17", "15", "16", "18"], 1),
+]
 
 def show_menu():
     print("\n" + "=" * 40)
