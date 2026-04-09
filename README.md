@@ -259,13 +259,11 @@ project/
 
 ### 브랜치 구조
 
-| 브랜치명                | 설명            |
-| ------------------- | ------------- |
-| `main`              | 최종 제출 브랜치     |
-| `feature/quiz-play` | 퀴즈 풀기 기능      |
-| `feature/add-quiz`  | 퀴즈 추가 기능      |
-| `feature/file-io`   | 파일 저장/불러오기 기능 |
-| `feature/exception` | 예외 처리 기능      |
+| 브랜치명 | 설명 |
+|---------|------|
+| `main` | 최종 제출 브랜치 |
+| `feature/play-quiz` | 퀴즈 풀이 기능 개발 브랜치 |
+| `feature/real-merge` | 브랜치 병합 실습을 위한 테스트 브랜치 |
 
 ### 사용한 Git 명령어
 
